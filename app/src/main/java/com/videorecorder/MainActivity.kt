@@ -1,11 +1,17 @@
 package com.videorecorder
 
 
+import android.hardware.Camera
+import android.hardware.camera2.CameraCharacteristics
 import android.media.CamcorderProfile
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
+import android.util.SparseArray
+import android.util.SparseIntArray
+import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.widget.Toast
@@ -101,19 +107,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initRecorder() {
+
+
+
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT)
-        mediaRecorder.setVideoSource(MediaRecorder.VideoSource.DEFAULT)
+        mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA)
+
+
 
         val cpHigh = CamcorderProfile
             .get(CamcorderProfile.QUALITY_HIGH)
         mediaRecorder.setProfile(cpHigh)
-        mediaRecorder.setVideoFrameRate(30);
+        mediaRecorder.setVideoFrameRate(240);
         mediaRecorder.setVideoEncodingBitRate(35000000);
         mediaRecorder.setVideoSize(1920, 1080);
 
 
-        mediaRecorder.setOutputFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).absolutePath+"/vid${System.currentTimeMillis()}.mp4")
+        Toast.makeText(this, cpHigh.videoFrameRate.toString(), Toast.LENGTH_SHORT).show()
 
+
+
+        mediaRecorder.setOutputFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).absolutePath+"/vid${System.currentTimeMillis()}.mp4")
+        mediaRecorder.setOnErrorListener { mr, what, extra ->
+            Log.e("error", "MediaRecorder error: what = $what, extra = $extra")
+        }
 
     }
 
@@ -163,12 +180,19 @@ class MainActivity : AppCompatActivity() {
             mediaRecorder.stop();
             recording = false;
 
+
             // Let's initRecorder so we can record again
             initRecorder();
             prepareRecorder();
         } else {
             recording = true;
-            mediaRecorder.start();
+            try {
+
+                mediaRecorder.start()
+            } catch (e: Exception) {
+                Log.e("error", "Error starting MediaRecorder: ${e.message}")
+            }
+
         }
     }
 
@@ -183,5 +207,6 @@ class MainActivity : AppCompatActivity() {
 //        super.onActivityResult(requestCode, resultCode, data)
 //
 //    }
+
 
 }
